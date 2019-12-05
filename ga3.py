@@ -53,10 +53,13 @@ def initialize_population(popSize, chromosome_length, feature):
 
 
 def calculate_fitness(data_set, individual):
+    # Fitness count
     fitness = 0
     for element in data_set:
         match = True
+        # loop rules in individual
         for rule in individual:
+            # If a rule minus the class
             if int(rule[-1]) != int(element[-1]):
                 continue
             for j,feature_range in enumerate(rule[:-1]):
@@ -65,8 +68,10 @@ def calculate_fitness(data_set, individual):
                 if float(feature_range[0]) > float(element[j]) or float(feature_range[1]) <float(element[j]):
                     match = False
                     break
+            # When the rule is found we break
             if match == True :
               break
+        # If there is a match we increase the fitness count
         if match:
             fitness += 1
     return fitness
@@ -128,6 +133,7 @@ def population_fitness(population, dataset):
 
 
 def best_individual(population, fitness):
+    # get the index of the best fitness
     best_fit = np.argmax(fitness)
     return population[best_fit]
 
