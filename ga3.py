@@ -135,58 +135,81 @@ def best_individual(population, fitness):
 
 
 def main():
-    CHROMOSOME_LENGTH = 7
-    POP_SIZE = 150
-    MAXIMUM_GEN = 150
-    PROBABILITY_CROSSOVER = 0.6
-    PROBABILITY_MUTATION = 0.4
+    # User defined parameters
+    CHROMOSOME_LENGTH = 5
+    POP_SIZE = 200
+    MAXIMUM_GEN = 100
+    PROBABILITY_CROSSOVER = 0.7
+    PROBABILITY_MUTATION = 0.25
     TOURNAMENT_SIZE = 3
     FEATURE = 6
 
+    # Initialzize the population
     population = initialize_population(POP_SIZE, CHROMOSOME_LENGTH, FEATURE)
-    train_set = read_data(train_data)
-    fitness = population_fitness(population, train_set)
+    # Read the data set
+    training_data_set = read_data(train_data)
+    # Calculate the fitness of the population
+    fitness = population_fitness(population, training_data_set)
 
-    fitter_fitness = np.max(fitness)
+    # Get the best fitness in the population
+    best_fitness = np.max(fitness)
+
+    # Calculate mean, percetange and keep track of it
     mean_progress = []
     mean_fitness = np.mean(fitness)
     mean_progress.append(mean_fitness)
-    percentage = np.max(fitness) / 1000 * 100
+    percetange = best_fitness / 60 * 100
 
-    print("population fitness: ", percentage)
-    print("population fitness score: ", fitter_fitness)
+    print("population fitness % : ", percetange)
+    print("population fitness score : ", best_fitness)
 
+    # Append the best fitness to a list to keep track of it to plot it on the graph
     best_fitness_progress = []
+    best_fitness_progress.append(best_fitness)
 
-    best_fitness_progress.append(fitter_fitness)
     current_pop = population
+
+    # Loop the generations
     for generation in range(MAXIMUM_GEN):
         print("Generation: ", generation)
+        # Create and empty population
         new_population = []
         clone_population = np.copy(current_pop)
-        selected_pop = tournament_selection(clone_population.tolist(), TOURNAMENT_SIZE, train_set)
+        # Do tournament selection on the current population
+        selected_pop = tournament_selection(clone_population.tolist(), TOURNAMENT_SIZE, training_data_set)
 
         for ind1, ind2 in zip(selected_pop[::2], selected_pop[1::2]):
+            # Generate random number between 0 and 1
             random_number = random.random()
+            # The chance of individual being crossovered based on the crossover probability
             if random_number < PROBABILITY_CROSSOVER:
+                # Do crossover
                 offspring_1, offspring_2 = crossover(ind1, ind2)
+                # Append new offsprings to the new population
                 new_population.append(offspring_1)
                 new_population.append(offspring_2)
 
+        # Loop the individuals in the new population
         for individual in new_population:
+            # The probability of the individual being mutated based on mutation probability rate
             if random.random() < PROBABILITY_MUTATION:
-                new_individual = mutation(individual, FEATURE)
+                # Do mutation on the individual
+                new_individual = mutation(individual)
+                # Append individual to new appopulation
                 new_population.append(new_individual)
 
-        fitness = population_fitness(current_pop, train_set)
-
-        fitter_fitness = np.max(fitness)
+        # Calculate the fitness of the new individual
+        fitness = population_fitness(current_pop, training_data_set)
+        # Calculate mean and percetange
+        best_fitness = np.max(fitness)
         mean_fitness = np.mean(fitness)
-        percentage = np.max(fitness) / 1000 * 100
-        print("population fitness (train data): ", percentage)
-        print("population fitness score (train data): ", fitter_fitness)
+        percetange = best_fitness / 60 * 100
 
-        best_fitness_progress.append(fitter_fitness)
+        print("population fitness: ", percetange)
+        print("population fitness score : ", best_fitness)
+
+        # Append the result to the progress list
+        best_fitness_progress.append(best_fitness)
         mean_progress.append(mean_fitness)
 
         if len(new_population) < POP_SIZE:
@@ -195,18 +218,19 @@ def main():
                 np.array(current_pop)[args_fitness[::-1]][:len(current_pop) - len(new_population)].tolist())
         current_pop = new_population
 
-    print("best individual")
+    # Read the train data
+    test_data_set = read_data(train_data)
+    # Find the best individual in the current population
     best_ind = best_individual(current_pop, fitness)
-    print(best_ind)
-    print("best fitness in test data")
-    test = read_data(test_data)
-    fit = calculate_fitness(test, best_ind)
-    print(fit)
+    # Calculate the fitness of the best individual from the training data using the test data
+    best_fitness_test_data = calculate_fitness(test_data_set, best_ind)
 
+    print("Best fitness in test data ", best_fitness_test_data)
 
-    plt.plot(best_fitness_progress, c='b', marker="^", label="training")
-    plt.plot(fit, c='g', marker="^", label="test")
-    plt.plot(mean_progress,  c='r', marker="^", label="mean")
+    # Plot the best fitness score and the mean in the graph
+    plt.plot(best_fitness_progress, c='b', marker="^", label="fitness test")
+    plt.plot(mean_progress, c='r', marker="^", label="mean")
+    plt.plot(best_fitness_test_data, c='g', marker="^", label="fitness training")
     plt.legend(loc=1)
     plt.xlabel('Generation')
     plt.ylabel('Fitness')
